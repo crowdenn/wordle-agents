@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wordle AI Arena</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js for the end-of-simulation stats -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <h2>Simulation Settings</h2>
+            <hr>
+            
+            <label for="agent-select">AGENTS TO RUN:</label>
+            <select id="agent-select">
+                <option value="frequency">Frequency Guesser</option>
+                <option value="random">Random Guesser</option>
+                <option value="entropy">Entropy Guesser</option>
+            </select>
+
+            <label for="rounds-input">ROUNDS TO SIMULATE:</label>
+            <input type="number" id="rounds-input" value="10" min="1" max="500">
+
+            <button id="launch-btn">Launch Simulation</button>
+        </aside>
+
+        <!-- Main Display Area -->
+        <main class="main-content">
+            <!-- Top Box: Animated Wordle Board -->
+            <div class="card grid-card">
+                <h3>Live Game View</h3>
+                <div id="wordle-board" class="board"></div>
+            </div>
+
+            <!-- Middle Box: Console Logs -->
+            <div class="card log-card">
+                <div id="log-feed">System initialized... Ready to run.</div>
+            </div>
+
+            <!-- Bottom Box: Graph -->
+            <div class="card chart-card">
+                <h3>Guess Distribution</h3>
+                <canvas id="stats-chart"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
