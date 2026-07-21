@@ -8,10 +8,6 @@ const roundsInput = document.getElementById('rounds-input');
 let isRunning = false;
 let statsChart = null;
 
-const BACKEND_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
-    : 'https://wordleagents.onrender.com';
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function logMessage(text) {
@@ -80,21 +76,28 @@ function filterPossibleWords(words, guess, feedback) {
     });
 }
 
-// 1. Grab the dropdown element
 const agentSelect = document.getElementById('agent-select');
 
 async function fetchAgentGuess(possibleWords) {
     const selectedAgent = agentSelect ? agentSelect.value : 'frequency';
 
-    const response = await fetch('http://localhost:5000/api/get-guess', {
+    // Relative path: resolves to localhost:5000 locally (when Flask serves this file)
+    // and to your-app.vercel.app in production. No hardcoded host needed.
+    const response = await fetch('/api/get-guess', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            possibleWords: possibleWords,         
-            allAllowedGuesses: ALLOWED_GUESSES,   
-            agentType: selectedAgent 
+        body: JSON.stringify({
+            possibleWords: possibleWords,
+            allAllowedGuesses: ALLOWED_GUESSES,
+            agentType: selectedAgent
         })
     });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Backend error (${response.status}): ${errText}`);
+    }
+
     const data = await response.json();
     return data.guess.toLowerCase();
 }
@@ -102,7 +105,7 @@ async function fetchAgentGuess(possibleWords) {
 // Render or update the Chart.js Bar Chart
 function renderChart(dist) {
     const ctx = document.getElementById('stats-chart').getContext('2d');
-    
+
     if (statsChart) statsChart.destroy();
 
     statsChart = new Chart(ctx, {
@@ -144,7 +147,15 @@ async function runSimulation() {
         logMessage(`--- Round ${round}/${totalRounds} (Secret: ${secretWord.toUpperCase()}) ---`);
 
         for (let attempt = 0; attempt < 6; attempt++) {
-            const guess = await fetchAgentGuess(currentPool);
+            let guess;
+            try {
+                guess = await fetchAgentGuess(currentPool);
+            } catch (err) {
+                logMessage(`⚠️ Agent request failed: ${err.message}`);
+                isRunning = false;
+                return;
+            }
+
             const feedback = evaluateGuess(guess, secretWord);
 
             displayGuess(attempt, guess, feedback);
